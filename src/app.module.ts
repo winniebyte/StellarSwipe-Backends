@@ -5,40 +5,48 @@ import { BullModule } from '@nestjs/bull';
 // import { CacheModule } from '@nestjs/cache-manager';
 import { stellarConfig } from './config/stellar.config';
 import { databaseConfig, redisConfig } from './config/database.config';
+import { connectionPoolConfig } from './database/config/connection-pool.config';
 import { xaiConfig } from './config/xai.config';
+
 import { appConfig, sentryConfig } from './config/app.config';
 import { jwtConfig } from './config/jwt.config';
+import { redisCacheConfig } from './config/redis.config';
+import configuration from './config/configuration';
+import { configSchema } from './config/schemas/config.schema';
 import { StellarConfigService } from './config/stellar.service';
+
 import { LoggerModule } from './common/logger';
 import { SentryModule } from './common/sentry';
-import { BetaModule } from './beta/beta.module';
-import { TradesModule } from './trades/trades.module';
-import { RiskManagerModule } from './risk/risk-manager.module';
-import { PortfolioModule } from './portfolio/portfolio.module';
-import { SignalsModule } from './signals/signals.module';
-import { AiValidationModule } from './ai-validation/ai-validation.module';
-import { UsersModule } from './users/users.module';
-import { AssetsModule } from './assets/assets.module';
-import { configSchema } from './config/schemas/config.schema';
-import configuration from './config/configuration';
-import { HealthModule } from './health/health.module';
 import { CacheModule } from './cache/cache.module';
-import { redisCacheConfig } from './config/redis.config';
-import { SorobanModule } from './soroban/soroban.module';
-import { SdexModule } from './sdex/sdex.module';
-import { StellarModule } from './stellar/stellar.module';
-import { DashboardModule } from './dashboard/dashboard.module';
-import { RatingsModule } from './ratings/ratings.module';
-import { ComplianceModule } from './compliance/compliance.module';
-import { RateLimitModule } from './common/rate-limit.module';
 import { AuthModule } from './auth/auth.module';
+ api
 import { AnalyticsModule } from './analytics/analytics.module';
 import { WebsocketModule } from './websocket/websocket.module';
 import { ApiMonetizationModule } from './api-monetization/api-monetization.module';
+=======
+import { UsersModule } from './users/users.module';
+import { SignalsModule } from './signals/signals.module';
+import { TradesModule } from './trades/trades.module';
+import { ProvidersModule } from './providers/providers.module';
+import { MlModule } from './ml/ml.module';
+// import { ValidationModule } from './common/validation/validation.module';
+import { ScalingModule } from './scaling/scaling.module';
+import { VersioningModule } from './common/modules/versioning.module';
+import { ReferralsModule } from './referrals/referrals.module';
+import { EventsModule } from './events/events.module';
+import { ApiKeysModule } from './api-keys/api-keys.module';
+import { SecurityModule } from './security/security.module';
+import { EventEmitterModule } from '@nestjs/event-emitter';
+import { SecurityMonitoringModule } from './security/security-monitoring.module';
+import { AccessControlModule } from './security/access-control/access-control.module';
+import { KycModule } from './kyc/kyc.module';
+import { ProductAnalyticsModule } from './analytics/product-analytics.module';
+import { BackupModule } from './backup/backup.module';
+import { AdminAnalyticsModule } from './admin/analytics/admin-analytics.module';
+main
 
 @Module({
   imports: [
-    // Configuration Module - loads environment variables with validation
     ConfigModule.forRoot({
       isGlobal: true,
       load: [
@@ -50,12 +58,10 @@ import { ApiMonetizationModule } from './api-monetization/api-monetization.modul
         redisCacheConfig,
         jwtConfig,
         xaiConfig,
+        connectionPoolConfig,
         configuration,
       ],
-      envFilePath: [
-        `.env.${process.env.NODE_ENV || 'development'}`,
-        '.env',
-      ],
+      envFilePath: [`.env.${process.env.NODE_ENV || 'development'}`, '.env'],
       cache: true,
       validationSchema: configSchema,
       validationOptions: {
@@ -63,7 +69,6 @@ import { ApiMonetizationModule } from './api-monetization/api-monetization.modul
         abortEarly: false,
       },
     }),
-    // Feature Modules
     BullModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -76,11 +81,7 @@ import { ApiMonetizationModule } from './api-monetization/api-monetization.modul
         },
       }),
     }),
-    // Logger Module - Winston-based structured logging
-    LoggerModule,
-    // Sentry Module - Error tracking
-    SentryModule,
-    // Database Module
+
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -97,30 +98,51 @@ import { ApiMonetizationModule } from './api-monetization/api-monetization.modul
         migrations: ['dist/migrations/*{.ts,.js}'],
         subscribers: ['dist/subscribers/*{.ts,.js}'],
         ssl: configService.get<boolean>('database.ssl') ?? false,
+        // Connection Pool Configuration (min: 10, max: 30 for 10k+ users)
+        extra: {
+          min: parseInt(process.env.DATABASE_POOL_MIN || '10', 10),
+          max: parseInt(process.env.DATABASE_POOL_MAX || '30', 10),
+          idleTimeoutMillis: parseInt(
+            process.env.DATABASE_POOL_IDLE_TIMEOUT || '30000',
+            10,
+          ),
+          connectionTimeoutMillis: parseInt(
+            process.env.DATABASE_POOL_CONNECTION_TIMEOUT || '2000',
+            10,
+          ),
+        },
       }),
     }),
-    // Feature Modules
+
+    EventEmitterModule.forRoot(),
+
+    // DatabaseOptimizationModule,
+    LoggerModule,
+    SentryModule,
     UsersModule,
     SignalsModule,
-    AssetsModule,
-    BetaModule,
     TradesModule,
-    RiskManagerModule,
-    PortfolioModule,
-    DashboardModule,
-    RatingsModule,
-    ComplianceModule,
-    RateLimitModule,
-    AnalyticsModule,
-    AiValidationModule,
-    HealthModule,
-    SdexModule,
-    SorobanModule,
-    StellarModule,
     CacheModule,
     AuthModule,
+ api
     WebsocketModule,
     ApiMonetizationModule,
+=======
+    ProvidersModule,
+    MlModule,
+    ScalingModule,
+    VersioningModule,
+    ReferralsModule,
+    EventsModule,
+    ApiKeysModule,
+    SecurityModule,
+    SecurityMonitoringModule,
+    AccessControlModule,
+    KycModule,
+    ProductAnalyticsModule,
+    BackupModule,
+    AdminAnalyticsModule,
+ main
   ],
   providers: [StellarConfigService],
   exports: [StellarConfigService],

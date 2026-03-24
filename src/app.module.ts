@@ -46,6 +46,7 @@ import { KycModule } from './kyc/kyc.module';
 import { ProductAnalyticsModule } from './analytics/product-analytics.module';
 import { BackupModule } from './backup/backup.module';
 import { AdminAnalyticsModule } from './admin/analytics/admin-analytics.module';
+import { RecommendationsModule } from './recommendations/recommendations.module';
 main
 main
 
@@ -149,6 +150,7 @@ main
     ProductAnalyticsModule,
     BackupModule,
     AdminAnalyticsModule,
+    RecommendationsModule,
  main
 main
   ],
